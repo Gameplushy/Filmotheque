@@ -30,9 +30,9 @@ namespace Filmotheque.Controllers
             List<Actor> actorsInPage = _context.Actors.Skip((page - 1) * number).Take(number).ToList();
             var res = new Dictionary<string, object>();
             if (page != 1) 
-                res.Add("previousPage", Url.Link(ControllerContext.ActionDescriptor.AttributeRouteInfo.Name, new { page = page - 1, number = number }));
+                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = number }));
             if(_context.Actors.Count() > page * number)
-                res.Add("nextPage", Url.Link(ControllerContext.ActionDescriptor.AttributeRouteInfo.Name, new { page = page + 1, number = number }));
+                res.Add("nextPage", Url.Link(null,new { page = page + 1, number = number }));
             res.Add("actors", actorsInPage);
             return new JsonResult(Ok(res));
         }
