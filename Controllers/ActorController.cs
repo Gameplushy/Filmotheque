@@ -25,9 +25,10 @@ namespace Filmotheque.Controllers
         }
 
         [HttpGet]
-        public JsonResult GetAll()
+        public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int number = 20)
         {
-            return new JsonResult(Ok(_context.Actors));
+            List<Actor> actorsInPage = _context.Actors.Skip((page - 1) * number).Take(number).ToList();
+            return new JsonResult(Ok(actorsInPage));
         }
 
         [HttpGet]
