@@ -28,7 +28,13 @@ namespace Filmotheque.Controllers
         public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int number = 20)
         {
             List<Actor> actorsInPage = _context.Actors.Skip((page - 1) * number).Take(number).ToList();
-            return new JsonResult(Ok(actorsInPage));
+            var res = new Dictionary<string, object>();
+            if (page != 1) 
+                res.Add("previousPage", Url.Link(ControllerContext.ActionDescriptor.AttributeRouteInfo.Name, new { page = page - 1, number = number }));
+            if(_context.Actors.Count() > page * number)
+                res.Add("nextPage", Url.Link(ControllerContext.ActionDescriptor.AttributeRouteInfo.Name, new { page = page + 1, number = number }));
+            res.Add("actors", actorsInPage);
+            return new JsonResult(Ok(res));
         }
 
         [HttpGet]
