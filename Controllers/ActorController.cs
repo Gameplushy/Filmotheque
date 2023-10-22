@@ -17,7 +17,7 @@ namespace Filmotheque.Controllers
         }
 
         [HttpPost]
-        public JsonResult Create(ActorRequest actor)
+        public JsonResult Create(ActorCreator actor)
         {
             var res = _context.Actors.Add(actor.ToActor());
             _context.SaveChanges();
@@ -49,17 +49,17 @@ namespace Filmotheque.Controllers
 
         [HttpPatch]
         [Route("{id}")]
-        public JsonResult Patch(int id,ActorRequest actor)
+        public JsonResult Patch(int id,ActorEditor actor)
         {
             Actor? oldActor = _context.Actors.Find(id);
             if (oldActor == null)
                 return new JsonResult(NotFound($"Actor of id {id} not found."));
-            if(actor.FirstName != oldActor.FirstName)
+            if(actor.FirstName != null && actor.FirstName != oldActor.FirstName)
                 oldActor.FirstName = actor.FirstName;
-            if(actor.LastName != oldActor.LastName)
+            if(actor.LastName != null && actor.LastName != oldActor.LastName)
                 oldActor.LastName = actor.LastName;
-            if(actor.BirthDate != oldActor.BirthDate)
-                oldActor.BirthDate = actor.BirthDate;
+            if(actor.BirthDate != null && actor.BirthDate != oldActor.BirthDate)
+                oldActor.BirthDate = (DateTime)actor.BirthDate;
             _context.SaveChanges();
             return new JsonResult(Ok(actor));
         }
