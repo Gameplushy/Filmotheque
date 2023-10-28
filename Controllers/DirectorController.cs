@@ -27,6 +27,7 @@ namespace Filmotheque.Controllers
         [HttpGet]
         public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int number = 20)
         {
+            if (number > 20) return new JsonResult(BadRequest("number must be lower than 20"));
             List<Director> directorsInPage = _context.Directors.Skip((page - 1) * number).Take(number).ToList();
             var res = new Dictionary<string, object>();
             if (page != 1) 
