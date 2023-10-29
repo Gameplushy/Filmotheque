@@ -13,5 +13,11 @@ namespace Filmotheque.Data
         {
 
         }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Movie>().HasMany(m => m.Actors).WithMany();
+            modelBuilder.Entity<Movie>().HasMany(m => m.Directors).WithMany();
+        }
     }
 }
