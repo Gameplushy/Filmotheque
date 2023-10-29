@@ -20,27 +20,18 @@ namespace Filmotheque.Controllers
         [HttpPost]
         public IActionResult Create(MovieCreator movie)
         {
-            if (movie.Actors.Distinct().Count() != movie.Actors.Count)
-                return new JsonResult(BadRequest("All actor ids must be unique."));
-            if (movie.Actors.Distinct().Count() != movie.Actors.Count)
-                return new JsonResult(BadRequest("All actor ids must be unique."));
-            List<Actor?> actors; List<Director?> directors;
-            actors = movie.Actors.Select(a => _context.Actors.SingleOrDefault(ra => ra.Id == a)).ToList();//_context.Actors.Where(a => movie.Actors.Contains(a.Id)).ToList();
-            if (actors.Any(a => a == null))
-                return new JsonResult(BadRequest("Invalid actor id detected."));
-            directors = movie.Directors.Select(d => _context.Directors.SingleOrDefault(rd => rd.Id == d)).ToList();//_context.Actors.Where(a => movie.Actors.Contains(a.Id)).ToList();
-            if (directors.Any(d => d == null))
-                return new JsonResult(BadRequest("Invalid director id detected."));
+            var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors);
+            if(checker.errorMessage != null) 
+                return new JsonResult(BadRequest(checker.errorMessage));
             if (!DateTime.TryParse(movie.ReleaseDate, out _))
                 return new JsonResult(BadRequest("Release date given is not a valid date."));
-            //var res = _context.Movies.Add(movie.ToMovie());
             Movie res = new Movie()
             {
                 Title = movie.Title,
                 Description = movie.Description,
                 ReleaseDate = movie.ReleaseDate,
-                Actors = actors!,
-                Directors = directors!           
+                Actors = checker.actors!,
+                Directors = checker.directors!           
             };
             var newId = _context.Movies.Add(res);
             _context.SaveChanges();
@@ -71,6 +62,33 @@ namespace Filmotheque.Controllers
             return new JsonResult(Ok(a));
         }
 
+        [HttpPatch]
+        [Route("{id}")]
+        public JsonResult Patch(int id, MovieEditor movie)
+        {
+            Movie? oldMovie = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
+            if (oldMovie == null)
+                return new JsonResult(NotFound($"Movie of id {id} not found."));
+            var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors,true);
+            if(checker.errorMessage != null) 
+                return new JsonResult(BadRequest(checker.errorMessage));
+            if (movie.ReleaseDate != null && !DateTime.TryParse(movie.ReleaseDate, out _))
+                return new JsonResult(BadRequest("Release date given is not a valid date."));
+
+            if (movie.Title != null && movie.Title != oldMovie.Title)
+                oldMovie.Title = movie.Title;
+            if (movie.Description != null && movie.Description != oldMovie.Description)
+                oldMovie.Description = movie.Description;
+            if (movie.ReleaseDate != null && movie.ReleaseDate != oldMovie.ReleaseDate)
+                oldMovie.ReleaseDate = movie.ReleaseDate;
+            if (checker.actors != null && !movie.Actors!.SequenceEqual(oldMovie.Actors.Select(a => a.Id)))
+                oldMovie.Actors = checker.actors;
+            if (checker.directors != null && !movie.Directors!.SequenceEqual(oldMovie.Directors.Select(d => d.Id)))
+                oldMovie.Directors = checker.directors;
+            _context.SaveChanges();
+            return new JsonResult(Ok(oldMovie));
+        }
+
         [HttpDelete]
         [Route("{id}")]
         public JsonResult Delete(int id)
@@ -82,5 +100,49 @@ namespace Filmotheque.Controllers
             _context.SaveChanges();
             return new JsonResult(Ok());
         }
+
+        private (List<Actor>? actors, List<Director>? directors, string? errorMessage) CheckActorsAndDirectorsIds(List<int>? actorIds,  List<int>? directorIds, bool editingMode = false)
+        {
+            List<Actor>? actors = null; List<Director>? directors = null;
+            if(!(editingMode && actorIds == null))
+            {
+                var res = CheckActorIds(actorIds!);
+                if(res.errorMessage != null)
+                    return (null,null,res.errorMessage);
+                actors = res.actors;
+            }
+            if(!(editingMode && directorIds == null))
+            {
+                var res = CheckDirectorIds(directorIds!);
+                if (res.errorMessage != null)
+                    return (null, null, res.errorMessage);
+                directors = res.directors;
+            }
+            return (actors, directors, null);
+        }
+
+        private (List<Actor>? actors, string? errorMessage) CheckActorIds(List<int> actorIds)
+        {
+            if (actorIds.Distinct().Count() != actorIds.Count)
+                return (null, "All actor ids must be unique.");
+            List<Actor?> actors;
+            actors = actorIds.Select(a => _context.Actors.SingleOrDefault(ra => ra.Id == a)).ToList();
+            if (actors.Any(a => a == null))
+                return (null, "Invalid actor id detected.");
+            return (actors, null);
+        }
+
+        private (List<Director>? directors, string? errorMessage) CheckDirectorIds(List<int> directorIds)
+        {
+            if (directorIds.Distinct().Count() != directorIds.Count)
+                return (null, "All director ids must be unique.");
+            List<Director?> directors;
+            directors = directorIds.Select(d => _context.Directors.SingleOrDefault(rd => rd.Id == d)).ToList();
+            if (directors.Any(d => d == null))
+                return (null, "Invalid director id detected.");
+            return (directors, null);
+        }
+
+
     }
 }
