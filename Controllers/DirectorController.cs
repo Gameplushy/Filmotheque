@@ -25,15 +25,17 @@ namespace Filmotheque.Controllers
         }
 
         [HttpGet]
-        public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int number = 20)
+        public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            if (number > 20) return new JsonResult(BadRequest("number must be lower than 20"));
-            List<Director> directorsInPage = _context.Directors.Skip((page - 1) * number).Take(number).ToList();
+            if (pageSize > 20) return new JsonResult(BadRequest("Page size must be lower than 20"));
+            List<Director> directorsInPage = _context.Directors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            if(directorsInPage.Count == 0)
+                return new JsonResult(BadRequest("This page is empty."));
             var res = new Dictionary<string, object>();
             if (page != 1) 
-                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = number }));
-            if(_context.Directors.Count() > page * number)
-                res.Add("nextPage", Url.Link(null,new { page = page + 1, number = number }));
+                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
+            if(_context.Directors.Count() > page * pageSize)
+                res.Add("nextPage", Url.Link(null,new { page = page + 1, number = pageSize }));
             res.Add("directors", directorsInPage);
             return new JsonResult(Ok(res));
         }
