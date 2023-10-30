@@ -22,7 +22,7 @@ namespace Filmotheque.Controllers
         {
             var res = _context.Actors.Add(actor.ToActor());
             _context.SaveChanges();
-            return Created(Url.Action("Get",new { id = res.Entity.Id }),res.Entity);
+            return Created(Url.Action("Get",new { id = res.Entity.Id })!,res.Entity);
         }
 
         [HttpGet]
@@ -37,9 +37,9 @@ namespace Filmotheque.Controllers
                 return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1) 
-                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
+                res.Add("previousPage", Url.Action(null, new { page = page - 1, number = pageSize })!);
             if(_context.Actors.Count() > page * pageSize)
-                res.Add("nextPage", Url.Link(null,new { page = page + 1, number = pageSize }));
+                res.Add("nextPage", Url.Action(null,new { page = page + 1, number = pageSize })!);
             res.Add("actors", actorsInPage);
             return Ok(res);
         }

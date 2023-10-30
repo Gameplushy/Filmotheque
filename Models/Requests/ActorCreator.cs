@@ -13,7 +13,6 @@ namespace Filmotheque.Models.Requests
 
         public Actor ToActor()
         {
-            if (FirstName == null || LastName == null || BirthDate == null) throw new Exception("You cannot fully convert this to an Actor yet, there are missing attributes.");
             return new Actor()
             {
                 Id = 0,

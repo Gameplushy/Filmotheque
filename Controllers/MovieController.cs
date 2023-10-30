@@ -3,6 +3,7 @@ using Filmotheque.Models;
 using Filmotheque.Data;
 using Filmotheque.Models.Requests;
 using Microsoft.EntityFrameworkCore;
+using Filmotheque.Models.Responses;
 
 namespace Filmotheque.Controllers
 {
@@ -18,7 +19,7 @@ namespace Filmotheque.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(201, Type = typeof(Movie))]
+        [ProducesResponseType(201, Type = typeof(MovieResponse))]
         public IActionResult Create(MovieCreator movie)
         {
             var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors);
@@ -36,11 +37,11 @@ namespace Filmotheque.Controllers
             };
             var newId = _context.Movies.Add(res);
             _context.SaveChanges();
-            return Created(Url.Action("Get",new {id = newId.Entity.Id}),newId.Entity);
+            return Created(Url.Action("Get",new {id = newId.Entity.Id})!,GivePersonLinksToMovie(newId.Entity));
         }
 
         [HttpGet]
-        [ProducesResponseType(200, Type = typeof(List<Movie>))]
+        [ProducesResponseType(200, Type = typeof(List<MovieResponse>))]
         [ProducesResponseType(400, Type = typeof(string))]
         [ProducesResponseType(204, Type = typeof(void))]
         public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] List<int>? actors = null, [FromQuery] List<int>? directors = null)
@@ -57,28 +58,29 @@ namespace Filmotheque.Controllers
                 return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1)
-                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
+                res.Add("previousPage", Url.Action(null, new { page = page - 1, number = pageSize })!);
             if (_context.Actors.Count() > page * pageSize)
-                res.Add("nextPage", Url.Link(null, new { page = page + 1, number = pageSize }));
-            res.Add("movies", moviesInPage);
+                res.Add("nextPage", Url.Action(null, new { page = page + 1, number = pageSize })!);
+            List<MovieResponse> formattedRes = moviesInPage.Select(GivePersonLinksToMovie).ToList();
+            res.Add("movies", formattedRes);
             return Ok(res);
         }
 
         [HttpGet]
         [Route("{id}")]
-        [ProducesResponseType(200, Type = typeof(Movie))]
+        [ProducesResponseType(200, Type = typeof(MovieResponse))]
         [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Get(int id)
         {
             Movie? a = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
             if (a == null)
                 return NotFound($"Movie of id {id} not found.");
-            return Ok(a);
+            return Ok(GivePersonLinksToMovie(a));
         }
 
         [HttpPatch]
         [Route("{id}")]
-        [ProducesResponseType(200, Type = typeof(Movie))]
+        [ProducesResponseType(200, Type = typeof(MovieResponse))]
         [ProducesResponseType(404, Type = typeof(string))]
         [ProducesResponseType(400, Type = typeof(string))]
         public IActionResult Patch(int id, MovieEditor movie)
@@ -103,7 +105,7 @@ namespace Filmotheque.Controllers
             if (checker.directors != null && !movie.Directors!.SequenceEqual(oldMovie.Directors.Select(d => d.Id)))
                 oldMovie.Directors = checker.directors;
             _context.SaveChanges();
-            return Ok(oldMovie);
+            return Ok(GivePersonLinksToMovie(oldMovie));
         }
 
         [HttpDelete]
@@ -162,6 +164,17 @@ namespace Filmotheque.Controllers
             return (directors, null);
         }
 
-
+        private MovieResponse GivePersonLinksToMovie(Movie mov)
+        {
+            return new MovieResponse()
+            {
+                Id = mov.Id,
+                Description = mov.Description,
+                ReleaseDate = mov.ReleaseDate,
+                Title = mov.Title,
+                Actors = mov.Actors.Select(ac => new ActorWithLink() { Link = Url.Action("Get", "Actor", new { Id = ac.Id })!, Actor = ac }).ToList(),
+                Directors = mov.Directors.Select(dir => new DirectorWithLink() { Link = Url.Action("Get", "Director", new { Id = dir.Id })!, Director = dir }).ToList(),
+            };
+        }
     }
 }

@@ -37,9 +37,9 @@ namespace Filmotheque.Controllers
                 return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1) 
-                res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
+                res.Add("previousPage", Url.Action(null, new { page = page - 1, number = pageSize })!);
             if(_context.Directors.Count() > page * pageSize)
-                res.Add("nextPage", Url.Link(null,new { page = page + 1, number = pageSize }));
+                res.Add("nextPage", Url.Action(null,new { page = page + 1, number = pageSize })!);
             res.Add("directors", directorsInPage);
             return Ok(res);
         }
