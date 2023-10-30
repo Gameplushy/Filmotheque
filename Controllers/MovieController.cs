@@ -22,9 +22,9 @@ namespace Filmotheque.Controllers
         {
             var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors);
             if(checker.errorMessage != null) 
-                return new JsonResult(BadRequest(checker.errorMessage));
+                return BadRequest(checker.errorMessage);
             if (!DateTime.TryParse(movie.ReleaseDate, out _))
-                return new JsonResult(BadRequest("Release date given is not a valid date."));
+                return BadRequest("Release date given is not a valid date.");
             Movie res = new Movie()
             {
                 Title = movie.Title,
@@ -35,54 +35,53 @@ namespace Filmotheque.Controllers
             };
             var newId = _context.Movies.Add(res);
             _context.SaveChanges();
-            return new JsonResult(Ok(newId.Entity));
+            return Ok(newId.Entity);
         }
 
         [HttpGet]
-        public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] List<int>? actors = null, [FromQuery] List<int>? directors = null)
+        public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] List<int>? actors = null, [FromQuery] List<int>? directors = null)
         {
-            if (pageSize > 20) return new JsonResult(BadRequest("Page size must be lower than 20"));
+            if (pageSize > 20) return BadRequest("Page size must be lower than 20");
             IEnumerable<Movie> movieList = _context.Movies.Include(m => m.Actors).Include(m => m.Directors);
-            //var movieListWithFilters = movieList.ToList();
             var checker = CheckActorsAndDirectorsIds(actors, directors, true);
             if(checker.errorMessage != null) 
-                return new JsonResult(BadRequest(checker.errorMessage));
+                return BadRequest(checker.errorMessage);
             if (checker.actors != null) movieList = movieList.Where(m => checker.actors.All(a => m.Actors.Contains(a)));
             if (checker.directors != null) movieList = movieList.Where(m => checker.directors.All(d => m.Directors.Contains(d)));
             List<Movie> moviesInPage = movieList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             if (moviesInPage.Count == 0)
-                return new JsonResult(BadRequest("This page is empty."));
+                return BadRequest("This page is empty.");
             var res = new Dictionary<string, object>();
             if (page != 1)
                 res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
             if (_context.Actors.Count() > page * pageSize)
                 res.Add("nextPage", Url.Link(null, new { page = page + 1, number = pageSize }));
             res.Add("movies", moviesInPage);
-            return new JsonResult(Ok(res));
+            return Ok(res);
         }
 
         [HttpGet]
         [Route("{id}")]
-        public JsonResult Get(int id)
+        public IActionResult Get(int id)
         {
             Movie? a = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
             if (a == null)
-                return new JsonResult(NotFound($"Movie of id {id} not found."));
-            return new JsonResult(Ok(a));
+                return NotFound($"Movie of id {id} not found.");
+            return Ok(a);
         }
 
         [HttpPatch]
         [Route("{id}")]
-        public JsonResult Patch(int id, MovieEditor movie)
+        public IActionResult Patch(int id, MovieEditor movie)
         {
             Movie? oldMovie = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
             if (oldMovie == null)
-                return new JsonResult(NotFound($"Movie of id {id} not found."));
+                return NotFound($"Movie of id {id} not found.");
             var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors,true);
             if(checker.errorMessage != null) 
-                return new JsonResult(BadRequest(checker.errorMessage));
+                return BadRequest(checker.errorMessage);
             if (movie.ReleaseDate != null && !DateTime.TryParse(movie.ReleaseDate, out _))
-                return new JsonResult(BadRequest("Release date given is not a valid date."));
+                return BadRequest("Release date given is not a valid date.");
 
             if (movie.Title != null && movie.Title != oldMovie.Title)
                 oldMovie.Title = movie.Title;
@@ -95,19 +94,19 @@ namespace Filmotheque.Controllers
             if (checker.directors != null && !movie.Directors!.SequenceEqual(oldMovie.Directors.Select(d => d.Id)))
                 oldMovie.Directors = checker.directors;
             _context.SaveChanges();
-            return new JsonResult(Ok(oldMovie));
+            return Ok(oldMovie);
         }
 
         [HttpDelete]
         [Route("{id}")]
-        public JsonResult Delete(int id)
+        public IActionResult Delete(int id)
         {
             Movie? oldMovie = _context.Movies.Find(id);
             if (oldMovie == null)
-                return new JsonResult(NotFound($"Movie of id {id} not found."));
+                return NotFound($"Movie of id {id} not found.");
             _context.Movies.Remove(oldMovie);
             _context.SaveChanges();
-            return new JsonResult(Ok());
+            return Ok();
         }
 
         private (List<Actor>? actors, List<Director>? directors, string? errorMessage) CheckActorsAndDirectorsIds(List<int>? actorIds,  List<int>? directorIds, bool editingMode = false)
