@@ -26,12 +26,15 @@ namespace Filmotheque.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(200, Type = typeof(List<Actor>))]
+        [ProducesResponseType(400, Type = typeof(string))]
+        [ProducesResponseType(204, Type = typeof(void))]
         public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             if(pageSize>20) return BadRequest("Page size must be lower than 20");
             List<Actor> actorsInPage = _context.Actors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             if (actorsInPage.Count == 0)
-                return BadRequest("This page is empty.");
+                return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1) 
                 res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
@@ -55,6 +58,8 @@ namespace Filmotheque.Controllers
 
         [HttpPatch]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(Actor))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Patch(int id,ActorEditor actor)
         {
             Actor? oldActor = _context.Actors.Find(id);
@@ -72,6 +77,8 @@ namespace Filmotheque.Controllers
 
         [HttpDelete]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(void))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Delete(int id)
         {
             Actor? oldActor = _context.Actors.Find(id);

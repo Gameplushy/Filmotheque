@@ -17,20 +17,24 @@ namespace Filmotheque.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(201, Type = typeof(Director))]
         public IActionResult Create(DirectorCreator director)
         {
             var res = _context.Directors.Add(director.ToDirector());
             _context.SaveChanges();
-            return Ok(res.Entity);
+            return Created(Url.Action("Get", new { id = res.Entity.Id })!,res.Entity);
         }
 
         [HttpGet]
+        [ProducesResponseType(200, Type = typeof(List<Director>))]
+        [ProducesResponseType(400, Type = typeof(string))]
+        [ProducesResponseType(204, Type = typeof(void))]
         public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             if (pageSize > 20) return BadRequest("Page size must be lower than 20");
             List<Director> directorsInPage = _context.Directors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             if(directorsInPage.Count == 0)
-                return BadRequest("This page is empty.");
+                return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1) 
                 res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
@@ -42,6 +46,8 @@ namespace Filmotheque.Controllers
 
         [HttpGet]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(Director))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Get(int id)
         {
             Director? a = _context.Directors.Find(id);
@@ -52,6 +58,8 @@ namespace Filmotheque.Controllers
 
         [HttpPatch]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(Director))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Patch(int id, DirectorEditor director)
         {
             Director? oldDirector = _context.Directors.Find(id);
@@ -69,6 +77,8 @@ namespace Filmotheque.Controllers
 
         [HttpDelete]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(void))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Delete(int id)
         {
             Director? oldDirector = _context.Directors.Find(id);

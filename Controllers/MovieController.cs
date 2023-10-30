@@ -18,6 +18,7 @@ namespace Filmotheque.Controllers
         }
 
         [HttpPost]
+        [ProducesResponseType(201, Type = typeof(Movie))]
         public IActionResult Create(MovieCreator movie)
         {
             var checker = CheckActorsAndDirectorsIds(movie.Actors, movie.Directors);
@@ -35,10 +36,13 @@ namespace Filmotheque.Controllers
             };
             var newId = _context.Movies.Add(res);
             _context.SaveChanges();
-            return Ok(newId.Entity);
+            return Created(Url.Action("Get",new {id = newId.Entity.Id}),newId.Entity);
         }
 
         [HttpGet]
+        [ProducesResponseType(200, Type = typeof(List<Movie>))]
+        [ProducesResponseType(400, Type = typeof(string))]
+        [ProducesResponseType(204, Type = typeof(void))]
         public IActionResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] List<int>? actors = null, [FromQuery] List<int>? directors = null)
         {
             if (pageSize > 20) return BadRequest("Page size must be lower than 20");
@@ -50,7 +54,7 @@ namespace Filmotheque.Controllers
             if (checker.directors != null) movieList = movieList.Where(m => checker.directors.All(d => m.Directors.Contains(d)));
             List<Movie> moviesInPage = movieList.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             if (moviesInPage.Count == 0)
-                return BadRequest("This page is empty.");
+                return NoContent();
             var res = new Dictionary<string, object>();
             if (page != 1)
                 res.Add("previousPage", Url.Link(null, new { page = page - 1, number = pageSize }));
@@ -62,6 +66,8 @@ namespace Filmotheque.Controllers
 
         [HttpGet]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(Movie))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Get(int id)
         {
             Movie? a = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
@@ -72,6 +78,9 @@ namespace Filmotheque.Controllers
 
         [HttpPatch]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(Movie))]
+        [ProducesResponseType(404, Type = typeof(string))]
+        [ProducesResponseType(400, Type = typeof(string))]
         public IActionResult Patch(int id, MovieEditor movie)
         {
             Movie? oldMovie = _context.Movies.Include(m=>m.Actors).Include(m=>m.Directors).SingleOrDefault(m=>m.Id==id);
@@ -99,6 +108,8 @@ namespace Filmotheque.Controllers
 
         [HttpDelete]
         [Route("{id}")]
+        [ProducesResponseType(200, Type = typeof(void))]
+        [ProducesResponseType(404, Type = typeof(string))]
         public IActionResult Delete(int id)
         {
             Movie? oldMovie = _context.Movies.Find(id);
