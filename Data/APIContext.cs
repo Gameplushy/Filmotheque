@@ -5,8 +5,8 @@ namespace Filmotheque.Data
 {
     public class APIContext : DbContext
     {
-        public DbSet<Person> Actors { get; set; }
-        public DbSet<Person> Directors { get; set; }
+        public DbSet<Actor> Actors { get; set; }
+        public DbSet<Director> Directors { get; set; }
         public DbSet<Movie> Movies { get; set; }
 
         public APIContext(DbContextOptions<APIContext> options) : base(options)
