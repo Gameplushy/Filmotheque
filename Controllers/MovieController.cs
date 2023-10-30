@@ -110,9 +110,9 @@ namespace Filmotheque.Controllers
             return new JsonResult(Ok());
         }
 
-        private (List<Actor>? actors, List<Director>? directors, string? errorMessage) CheckActorsAndDirectorsIds(List<int>? actorIds,  List<int>? directorIds, bool editingMode = false)
+        private (List<Person>? actors, List<Person>? directors, string? errorMessage) CheckActorsAndDirectorsIds(List<int>? actorIds,  List<int>? directorIds, bool editingMode = false)
         {
-            List<Actor>? actors = null; List<Director>? directors = null;
+            List<Person>? actors = null; List<Person>? directors = null;
             if(!(editingMode && actorIds == null))
             {
                 var res = CheckActorIds(actorIds!);
@@ -130,22 +130,22 @@ namespace Filmotheque.Controllers
             return (actors, directors, null);
         }
 
-        private (List<Actor>? actors, string? errorMessage) CheckActorIds(List<int> actorIds)
+        private (List<Person>? actors, string? errorMessage) CheckActorIds(List<int> actorIds)
         {
             if (actorIds.Distinct().Count() != actorIds.Count)
                 return (null, "All actor ids must be unique.");
-            List<Actor?> actors;
+            List<Person?> actors;
             actors = actorIds.Select(a => _context.Actors.SingleOrDefault(ra => ra.Id == a)).ToList();
             if (actors.Any(a => a == null))
                 return (null, "Invalid actor id detected.");
             return (actors, null);
         }
 
-        private (List<Director>? directors, string? errorMessage) CheckDirectorIds(List<int> directorIds)
+        private (List<Person>? directors, string? errorMessage) CheckDirectorIds(List<int> directorIds)
         {
             if (directorIds.Distinct().Count() != directorIds.Count)
                 return (null, "All director ids must be unique.");
-            List<Director?> directors;
+            List<Person?> directors;
             directors = directorIds.Select(d => _context.Directors.SingleOrDefault(rd => rd.Id == d)).ToList();
             if (directors.Any(d => d == null))
                 return (null, "Invalid director id detected.");

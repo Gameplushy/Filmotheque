@@ -1,6 +1,6 @@
 ﻿namespace Filmotheque.Models
 {
-    public class Director
+    public class Person
     {
         public int Id { get; set; }
         public required string FirstName { get; set; }

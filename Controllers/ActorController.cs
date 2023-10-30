@@ -28,7 +28,7 @@ namespace Filmotheque.Controllers
         public JsonResult GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
             if(pageSize>20) return new JsonResult(BadRequest("Page size must be lower than 20"));
-            List<Actor> actorsInPage = _context.Actors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+            List<Person> actorsInPage = _context.Actors.Skip((page - 1) * pageSize).Take(pageSize).ToList();
             if (actorsInPage.Count == 0)
                 return new JsonResult(BadRequest("This page is empty."));
             var res = new Dictionary<string, object>();
@@ -44,7 +44,7 @@ namespace Filmotheque.Controllers
         [Route("{id}")]
         public JsonResult Get(int id)
         {
-            Actor? a = _context.Actors.Find(id);
+            Person? a = _context.Actors.Find(id);
             if (a == null)
                 return new JsonResult(NotFound($"Actor of id {id} not found."));
             return new JsonResult(Ok(a));
@@ -54,7 +54,7 @@ namespace Filmotheque.Controllers
         [Route("{id}")]
         public JsonResult Patch(int id,ActorEditor actor)
         {
-            Actor? oldActor = _context.Actors.Find(id);
+            Person? oldActor = _context.Actors.Find(id);
             if (oldActor == null)
                 return new JsonResult(NotFound($"Actor of id {id} not found."));
             if(actor.FirstName != null && actor.FirstName != oldActor.FirstName)
@@ -71,7 +71,7 @@ namespace Filmotheque.Controllers
         [Route("{id}")]
         public JsonResult Delete(int id)
         {
-            Actor? oldActor = _context.Actors.Find(id);
+            Person? oldActor = _context.Actors.Find(id);
             if (oldActor == null) 
                 return new JsonResult(NotFound($"Actor of id {id} not found."));
             _context.Actors.Remove(oldActor);

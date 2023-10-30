@@ -11,10 +11,10 @@ namespace Filmotheque.Models.Requests
         [Required]
         public required DateTime BirthDate { get; set; }
 
-        public Actor ToActor()
+        public Person ToActor()
         {
             if (FirstName == null || LastName == null || BirthDate == null) throw new Exception("You cannot fully convert this to an Actor yet, there are missing attributes.");
-            return new Actor()
+            return new Person()
             {
                 Id = 0,
                 FirstName = FirstName,
