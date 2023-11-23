@@ -18,7 +18,7 @@ Open the solution (.sln file) using Visual Studio. In case there are compiler er
 Go to the solution's folder. Use the command `dotnet restore`.
 
 ### Using the exe
-Download the zip file found [here](https://github.com/Gameplushy/Filmotheque/releases/tag/full-release).
+Download the zip file found [here](https://github.com/Gameplushy/Filmotheque/releases/tag/in-memory-release).
 
 ## How to use
 
